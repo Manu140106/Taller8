@@ -6,7 +6,7 @@ CREATE TABLE usuarios (
 	usuario_id INT PRIMARY KEY AUTO_INCREMENT, 
 	nombre VARCHAR(80) NOT NULL,
 	avatar VARCHAR(10) DEFAULT '🎮',
-	crated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE puntajes (
@@ -21,19 +21,11 @@ CREATE TABLE puntajes (
 
 CREATE TABLE logs_db (
 	idLogs_db INT PRIMARY KEY AUTO_INCREMENT,
-	usuario_id INT, 
-	accion VARCHAR(50) NOT NULL, 
+	usuario_id INT,
+	accion VARCHAR(50) NOT NULL,
 	detalle LONGTEXT,
 	fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id)
 );
 
--- Usuarios de prueba
-INSERT INTO usuarios (nombre, avatar) VALUES
-('Juan', '🎮'),
-('Maria', '⭐'),
-('Carlos', '🔥'),
-('Ana', '🎯'),
-('Pedro', '🚀');
-
-SELECT * FROM usuarios;
+-- Nota: usuarios de prueba removidos. Los nombres se registrarán cuando los jugadores ingresen desde la aplicación.

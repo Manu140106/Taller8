@@ -28,4 +28,5 @@ CREATE TABLE logs_db (
 	FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id)
 );
 
+
 -- Nota: usuarios de prueba removidos. Los nombres se registrarán cuando los jugadores ingresen desde la aplicación.

@@ -5,6 +5,9 @@ $usuario = app_require_user();
 $historial = app_user_history((int) $usuario['usuario_id']);
 $stats = app_user_stats((int) $usuario['usuario_id']);
 
+$rawCount = count($historial);
+
+
 $points = [];
 foreach ($historial as $row) {
     $points[] = (int) $row['puntaje'];
@@ -62,6 +65,9 @@ app_render_top('Mi Puntaje', 'historial', $extraCss);
   <a class="btn btn-secondary" href="logout.php">Cambiar usuario</a>
 </div>
 
+<div style="margin-bottom:1rem;color:var(--muted)">
+</div>
+
 <div class="stats-grid">
   <div class="stat-card"><div class="muted">Mejor puntaje</div><div style="font-size: 2rem; font-weight: 900; color: #22d3ee;"><?= (int) $stats['mejor'] ?></div></div>
   <div class="stat-card"><div class="muted">Partidas jugadas</div><div style="font-size: 2rem; font-weight: 900; color: #c084fc;"><?= (int) $stats['partidas'] ?></div></div>
@@ -84,8 +90,10 @@ app_render_top('Mi Puntaje', 'historial', $extraCss);
       <?php if (count($svgPoints) > 1): ?>
         <polyline fill="none" stroke="url(#lineGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" points="<?= implode(' ', $svgPoints) ?>" />
       <?php endif; ?>
-      <?php foreach ($svgPoints as $point): [$x, $y] = array_map('floatval', explode(',', $point)); ?>
+      <?php foreach ($svgPoints as $i => $point): [$x, $y] = array_map('floatval', explode(',', $point));
+        $val = (int) $historial[$i]['puntaje']; ?>
         <circle cx="<?= $x ?>" cy="<?= $y ?>" r="6" fill="#22d3ee" />
+        <text x="<?= $x ?>" y="<?= $y - 12 ?>" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="700"><?= $val ?></text>
       <?php endforeach; ?>
     </svg>
   </div>

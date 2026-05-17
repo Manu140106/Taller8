@@ -1,0 +1,72 @@
+openapi: 3.0.0
+info:
+  title: TriviaScore API
+  version: 1.0.0
+  description: API mínima para guardar puntajes de TriviaScore (endpoints públicos para pruebas)
+servers:
+  - url: /Taller8
+paths:
+  /save_score.php:
+    post:
+      summary: Guardar puntaje de una partida
+      description: Recibe datos del juego y guarda un registro en la tabla `puntajes`.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                usuario_id:
+                  type: integer
+                  description: Id del usuario (opcional si existe sesión)
+                puntaje:
+                  type: integer
+                  description: Puntaje calculado por el cliente (opcional)
+                correctas:
+                  type: integer
+                  description: Número de respuestas correctas
+                total_preguntas:
+                  type: integer
+                  description: Total de preguntas (por defecto 10)
+              required: [correctas, total_preguntas]
+            examples:
+              example-1:
+                summary: Ejemplo rápido para usuario Sofia
+                value: {
+                  usuario_id: 1,
+                  puntaje: 1337,
+                  correctas: 7,
+                  total_preguntas: 10
+                }
+      responses:
+        '200':
+          description: Registro guardado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  score_id: { type: integer }
+                  puntaje: { type: integer }
+                  correctas: { type: integer }
+                  total_preguntas: { type: integer }
+        '401':
+          description: No autorizado (falta sesión y no se envió usuario_id)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  error: { type: string }
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  error: { type: string }

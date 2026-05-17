@@ -88,13 +88,17 @@ function app_insert_log(?int $usuarioId, string $accion, string $detalle, string
     $log->info($mensaje);
 }
 
-function app_save_score(int $usuarioId, int $correctas, int $totalPreguntas): array
+function app_save_score(int $usuarioId, int $correctas, int $totalPreguntas, ?int $puntajeOverride = null): array
 {
     global $pdo;
 
     $totalPreguntas = max(1, $totalPreguntas);
     $correctas = max(0, min($totalPreguntas, $correctas));
+  if (is_int($puntajeOverride)) {
+    $puntaje = max(0, $puntajeOverride);
+  } else {
     $puntaje = (int) round(($correctas / $totalPreguntas) * 1000);
+  }
 
     $stmt = $pdo->prepare('INSERT INTO puntajes (usuario_id, puntaje, total_preguntas, correctas) VALUES (?, ?, ?, ?)');
     $stmt->execute([$usuarioId, $puntaje, $totalPreguntas, $correctas]);

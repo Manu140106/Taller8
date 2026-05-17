@@ -43,7 +43,7 @@ $series = $pdo->query("
     FROM puntajes p $where
     GROUP BY $group
     ORDER BY MIN(p.fecha) ASC
-)->fetchAll();
+  ")->fetchAll();
 
 
 // ── Top 5 ────────────────────────────────────────────────────────────────────
@@ -79,6 +79,7 @@ $stmt->execute(["Reporte | Período: $period"]);
 <title>TriviaScore — Reportes</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
   :root { --bg:#0d0d1a; --card:#16162a; --border:#2a2a4a; --purple:#7c3aed; --cyan:#06b6d4; --yellow:#fbbf24; --green:#22c55e; --pink:#ec4899; --text:#f1f5f9; --muted:#94a3b8; }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -151,18 +152,42 @@ $stmt->execute(["Reporte | Período: $period"]);
       <?php if (count($series) > 0): ?>
         <canvas id="chartBar" height="120"></canvas>
         <script>
+        Chart.register(ChartDataLabels);
+        const chartLabels = <?= json_encode(array_column($series,'etiqueta')) ?>;
+        const chartData = <?= json_encode(array_map('intval', array_column($series,'valor'))) ?>;
         new Chart(document.getElementById('chartBar'), {
           type: 'bar',
           data: {
-            labels: <?= json_encode(array_column($series,'etiqueta')) ?>,
-            datasets:[{ label:'Puntaje promedio', data:<?= json_encode(array_column($series,'valor')) ?>,
+            labels: chartLabels,
+            datasets:[{ label:'Puntaje promedio', data: chartData,
               backgroundColor:'rgba(124,58,237,.6)', borderColor:'#7c3aed', borderWidth:2, borderRadius:8 }]
           },
-          options: { responsive:true, plugins:{legend:{display:false}},
-            scales:{ x:{ticks:{color:'#94a3b8'},grid:{color:'#2a2a4a'}}, y:{ticks:{color:'#94a3b8'},grid:{color:'#2a2a4a'},beginAtZero:true} }
+          options: {
+            responsive:true,
+            plugins:{
+              legend:{display:false},
+              datalabels: {
+                color: '#fff',
+                anchor: 'end',
+                align: 'end',
+                font: { weight: '700' },
+                formatter: function(value){ return value; }
+              }
+            },
+            scales:{
+              x:{ ticks:{ color:'#94a3b8' }, grid:{ color:'#2a2a4a' } },
+              y:{ ticks:{ color:'#94a3b8' }, grid:{ color:'#2a2a4a' }, beginAtZero:true }
+            }
           }
         });
         </script>
+        <div class="chart-values" style="margin-top:.8rem;display:flex;gap:.6rem;flex-wrap:wrap">
+          <?php foreach ($series as $s): ?>
+            <div style="background:rgba(255,255,255,.03);padding:.5rem .7rem;border-radius:8px;border:1px solid rgba(42,42,74,.6);font-weight:700;color:var(--cyan)">
+              <?= htmlspecialchars($s['etiqueta']) ?>: <?= intval($s['valor']) ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
       <?php else: ?>
         <div class="empty"><span style="font-size:2.5rem">📊</span><p>No hay datos para este período</p></div>
       <?php endif; ?>

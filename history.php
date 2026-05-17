@@ -59,7 +59,7 @@ app_render_top('Mi Puntaje', 'historial', $extraCss);
       <p class="section-subtitle">Historial de puntajes</p>
     </div>
   </div>
-  <a class="btn btn-secondary" href="index.php">Cambiar usuario</a>
+  <a class="btn btn-secondary" href="logout.php">Cambiar usuario</a>
 </div>
 
 <div class="stats-grid">

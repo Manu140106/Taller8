@@ -1,9 +1,13 @@
-CREATE DATABASE taller8; 
+CREATE DATABASE taller8;
 
 USE taller8;
 
+DROP TABLE IF EXISTS logs_db;
+DROP TABLE IF EXISTS puntajes;
+DROP TABLE IF EXISTS usuarios;
+
 CREATE TABLE usuarios (
-	usuario_id INT PRIMARY KEY AUTO_INCREMENT, 
+	usuario_id INT PRIMARY KEY AUTO_INCREMENT,
 	nombre VARCHAR(80) NOT NULL,
 	avatar VARCHAR(10) DEFAULT '🎮',
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -29,4 +33,6 @@ CREATE TABLE logs_db (
 );
 
 
--- Nota: usuarios de prueba removidos. Los nombres se registrarán cuando los jugadores ingresen desde la aplicación.
+SELECT * FROM usuarios;
+SELECT * FROM puntajes;
+SELECT * FROM logs_db;

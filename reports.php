@@ -5,27 +5,46 @@ require_once __DIR__ . '/config/db.php';
 $period = $_GET['period'] ?? 'all';
 if (!in_array($period, ['week','month','all'])) $period = 'all';
 
+$driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
 // ── Serie para la gráfica ────────────────────────────────────────────────────
-if ($period === 'week') {
+if ($driver === 'sqlite') {
+  if ($period === 'week') {
+    $where  = "WHERE p.fecha >= datetime('now', '-7 days')";
+    $group  = "strftime('%Y-%m-%d', p.fecha)";
+    $label  = "strftime('%d/%m', p.fecha)";
+  } elseif ($period === 'month') {
+    $where  = "WHERE p.fecha >= datetime('now', '-1 month')";
+    $group  = "strftime('%Y-%m-%d', p.fecha)";
+    $label  = "strftime('%d/%m', p.fecha)";
+  } else {
+    $where  = "";
+    $group  = "strftime('%Y-%m', p.fecha)";
+    $label  = "strftime('%Y-%m', p.fecha)";
+  }
+} else {
+  if ($period === 'week') {
     $where  = "WHERE p.fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
     $group  = "DATE(p.fecha)";
     $label  = "DATE_FORMAT(p.fecha, '%d/%m')";
-} elseif ($period === 'month') {
+  } elseif ($period === 'month') {
     $where  = "WHERE p.fecha >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
     $group  = "DATE(p.fecha)";
     $label  = "DATE_FORMAT(p.fecha, '%d/%m')";
-} else {
+  } else {
     $where  = "";
     $group  = "YEAR(p.fecha), MONTH(p.fecha)";
     $label  = "CONCAT(YEAR(p.fecha), '-', LPAD(MONTH(p.fecha),2,'0'))";
+  }
 }
 
 $series = $pdo->query("
-    SELECT $label AS etiqueta, ROUND(AVG(p.puntaje)) AS valor, COUNT(*) AS partidas
+    SELECT MIN($label) AS etiqueta, ROUND(AVG(p.puntaje)) AS valor, COUNT(*) AS partidas
     FROM puntajes p $where
     GROUP BY $group
     ORDER BY MIN(p.fecha) ASC
-")->fetchAll();
+)->fetchAll();
+
 
 // ── Top 5 ────────────────────────────────────────────────────────────────────
 $topUsuarios = $pdo->query("

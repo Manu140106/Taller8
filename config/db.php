@@ -1,62 +1,70 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Formatter\LineFormatter;
 
-// ── Conexión a la base de datos ──────────────────────────────────────────────
+// ── Conexión a MySQL ────────────────────────────────────────────────────────
 $host   = getenv('DB_HOST') ?: '127.0.0.1';
-$port   = getenv('DB_PORT') ?: '3307';
+$port   = getenv('DB_PORT') ?: '3306';
 $dbname = getenv('DB_NAME') ?: 'taller8';
 $user   = getenv('DB_USER') ?: 'root';
-$pass   = getenv('DB_PASS') ?: '';
+$pass   = getenv('DB_PASS') ?: 'manuela140106';
 
 try {
-    $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8";
-    $pdo = new PDO($dsn, $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $serverPdo = new PDO(
+        "mysql:host={$host};port={$port};charset=utf8mb4",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]
+    );
+
+    $serverPdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbname}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+    $pdo = new PDO(
+        "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        ]
+    );
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS usuarios (
+        usuario_id INT PRIMARY KEY AUTO_INCREMENT,
+        nombre VARCHAR(80) NOT NULL,
+        avatar VARCHAR(10) DEFAULT '🎮',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS puntajes (
+        idPuntajes INT PRIMARY KEY AUTO_INCREMENT,
+        usuario_id INT NOT NULL,
+        puntaje INT NOT NULL,
+        total_preguntas INT DEFAULT 10,
+        correctas INT NOT NULL,
+        fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS logs_db (
+        idLogs_db INT PRIMARY KEY AUTO_INCREMENT,
+        usuario_id INT,
+        accion VARCHAR(50) NOT NULL,
+        detalle LONGTEXT,
+        fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 } catch (PDOException $e) {
-    // Intentar fallback a SQLite para pruebas locales
-    try {
-        $sqliteFile = __DIR__ . '/../data/taller8.sqlite';
-        if (!is_dir(dirname($sqliteFile))) {
-            mkdir(dirname($sqliteFile), 0777, true);
-        }
-        $pdo = new PDO('sqlite:' . $sqliteFile);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->exec('PRAGMA foreign_keys = ON');
-
-        // Crear tablas si no existen (adaptadas de esquema MySQL)
-        $pdo->exec("CREATE TABLE IF NOT EXISTS usuarios (
-            usuario_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
-            avatar TEXT DEFAULT '🎮',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )");
-
-        $pdo->exec("CREATE TABLE IF NOT EXISTS puntajes (
-            idPuntajes INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER NOT NULL,
-            puntaje INTEGER NOT NULL,
-            total_preguntas INTEGER DEFAULT 10,
-            correctas INTEGER NOT NULL,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id)
-        )");
-
-        $pdo->exec("CREATE TABLE IF NOT EXISTS logs_db (
-            idLogs_db INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER,
-            accion TEXT NOT NULL,
-            detalle TEXT,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id)
-        )");
-
-    } catch (PDOException $ex) {
-        die(json_encode(['error' => 'Error de conexión: ' . $e->getMessage(), 'sqlite_error' => $ex->getMessage()]));
-    }
+    die(json_encode([
+        'error' => 'No se pudo conectar a MySQL. Revisa DB_HOST, DB_PORT, DB_NAME, DB_USER y DB_PASS.',
+        'detalle' => $e->getMessage(),
+    ]));
 }
 
 // ── Logger Monolog ───────────────────────────────────────────────────────────
